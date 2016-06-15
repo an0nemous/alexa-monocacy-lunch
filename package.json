@@ -1,0 +1,13 @@
+{
+  "name": "node-monocacy-lunch",
+  "version": "0.0.1",
+  "description": "Monocacy Lunch.",
+  "main": "server.js",
+  "author": "Paul Orejimi",
+  "dependencies": {
+    "alexa-app": "^2.3.4",
+    "needle": "^1.0.0",
+    "request": "latest",
+    "underscore": "latest"
+  }
+}
