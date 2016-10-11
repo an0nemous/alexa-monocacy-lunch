@@ -1,4 +1,5 @@
 var alexa = require('alexa-app'),
+    replace = require('str-replace'),
     SchoolNames = require('SchoolNames');
 
 console.log('creating alexa app...');
@@ -8,29 +9,49 @@ var sessionAttributes = {};
 
 app.launch(function (request, response) {
     response.session('open_session', 'true');
-    response.say("Welcome to Monocacy menu.  You can ask for what's on the breakfast or lunch menu today or tomorrow");
+    response.say("Welcome to FCPS School menu.  You can ask for what's on the breakfast or lunch menu today, tomorrow or any date in the near future");
     response.shouldEndSession(false, "If you are not sure how to ask me, say help");
 });
 
 app.dictionary = {
-    "schoolNames": SchoolNames.schools
+    "schoolNames": SchoolNames.schools,
 };
 
 console.log("defining LunchIntent...");
+// "{what is|what's} for {breakfast|lunch|MENUTYPE}{ on|} {-|MENUDATE} at {schoolNames|SCHOOL}{ school|}"
 
 app.intent('MenuIntent',
     {
-        "slots": {"SCHOOL":"LITERAL", "MENUTYPE":"LITERAL", "MENUDATE":"AMAZON.DATE"},
+        "slots": {"MENUTYPE":"LITERAL", },
         "utterances": [
-            "{what is|what's} for {breakfast|lunch|MENUTYPE}{ on|} {-|MENUDATE} at {schoolNames|SCHOOL}{ school|}"
+            "{what is|what's} for {breakfast|lunch|MENUTYPE}"
         ]
     },
     function (request, response) {
-        console.log("[MenuIntent]");
-        getMenu(response, request.slot('SCHOOL'), request.slot('MENUTYPE'), request.slot('MENUDATE'));
+        getMenuWhen(request, response);
         return false;
     }
 );
+
+app.intent('MenuWhen',
+    {
+        "slots": {"MENUDATE":"AMAZON.DATE"}
+    },
+    function(request, response) {
+        getMenuWhere(request, response);
+        return false;
+    }
+);
+
+// app.intent('MenuSchool',
+//     {
+//         "slots": {"SCHOOL":"LITERAL"}
+//     },
+//     function(request, response) {
+//         getMenu(response, )
+//         return false;
+//     }
+// );
 
 console.log("defining HelpIntent...");
 
@@ -47,6 +68,7 @@ app.intent('HelpIntent',
         var rand = getRandomInt(1, 7);
         var schoolName = getRandomSchoolName();
 
+        // TODO: each utterance should offer choice for each school
         switch (rand) {
             case 0:
                 response.say("what is for lunch today at " + schoolName);
@@ -155,6 +177,22 @@ function getApiUrl(schoolCode, menuCode, menuDate) {
     return apiUrl;
 }
 
+function getMenuWhen(request, response)
+{
+    response.session('type', request.slot('MENUTYPE'));
+
+    // ask when
+    response.say ('ok, ' + request.slot('MENUTYPE') + ' when');
+}
+
+function getMenuWhere(request, response)
+{
+    response.session('when', request.slot('MENUDATE'));
+    // ask where
+    getMenu(response, request.slot('SCHOOL'), request.slot('MENUTYPE'), request.slot('MENUDATE'));
+}
+
+//function getMen
 /**
  * Gets the menu details
  *
@@ -294,7 +332,9 @@ function getMenu(response, schoolName, menuType, menuDate) {
         });
 
         cardText = responseText;
+        console.log('cardText: ' + cardText);
 
+        responseText = replace.all("&").from(responseText).with("and");
         console.log ("responseText: " + responseText);
 
         response.say (responseText);

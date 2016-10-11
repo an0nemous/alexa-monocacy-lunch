@@ -8,6 +8,7 @@
     "alexa-app": "^2.3.4",
     "needle": "^1.0.0",
     "request": "latest",
+    "str-replace": "0.0.5",
     "underscore": "latest"
   }
 }
